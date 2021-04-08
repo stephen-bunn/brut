@@ -138,3 +138,7 @@ coverage.xml
 # misc
 reports/
 main.py
+
+# Brut specific
+data/
+brut.yml
