@@ -11,14 +11,14 @@ import environ
 
 
 @environ.config(prefix="DB")
-class DbConfig:
+class DbEnv:
     """Describes environment configuration for the primary database."""
 
     url: str = environ.var()
 
 
 @environ.config(prefix="LOG")
-class LogConfig:
+class LogEnv:
     """Describes environment configuration for logging."""
 
     dir: str = environ.var()
@@ -32,14 +32,15 @@ class LogConfig:
 
 
 @environ.config(prefix="REDIS")
-class RedisConfig:
+class RedisEnv:
     """Describes environment configuration for redis."""
 
     url: str = environ.var("redis://redis:6379/0")
 
 
 @environ.config(prefix="REDDIT")
-class RedditConfig:
+class RedditEnv:
+    """Describes environment configuration for reddit."""
 
     client_id: str = environ.var()
     client_secret: str = environ.var()
@@ -47,17 +48,17 @@ class RedditConfig:
 
 
 @environ.config(prefix="APP")
-class AppConfig:
+class AppEnv:
     """Describes application environment configuration."""
 
-    db: DbConfig = environ.group(DbConfig)
-    log: LogConfig = environ.group(LogConfig)
-    redis: RedisConfig = environ.group(RedisConfig)
-    reddit: RedditConfig = environ.group(RedditConfig)
+    db: DbEnv = environ.group(DbEnv)
+    log: LogEnv = environ.group(LogEnv)
+    redis: RedisEnv = environ.group(RedisEnv)
+    reddit: RedditEnv = environ.group(RedditEnv)
     config_path: Path = environ.var(converter=Path)
 
 
-def get_env() -> AppConfig:
+def get_env() -> AppEnv:
     """Get the current environment instance.
 
     Returns:
@@ -65,7 +66,7 @@ def get_env() -> AppConfig:
             The current environment as read in by the :class:`~AppConfig`.
     """
 
-    return environ.to_config(AppConfig, environ=os.environ)
+    return environ.to_config(AppEnv, environ=os.environ)
 
 
 instance = get_env()

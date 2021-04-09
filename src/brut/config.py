@@ -27,13 +27,13 @@ class IntervalConfig:
 class ScheduleConfig:
     """Describes available schedules for an observe entry."""
 
-    cron: str = var(required=False)
+    crontab: str = var(required=False)
     interval: IntervalConfig = var(required=False)
 
 
 @config
-class ObserveConfig:
-    """Describes some content to observe."""
+class WatchConfig:
+    """Describes some content to watch."""
 
     name: str = var()
     type: str = var()
@@ -46,7 +46,7 @@ class ObserveConfig:
 class BrutConfig:
     """Contains observe configuration for the app."""
 
-    observe: List[ObserveConfig] = var()
+    watch: List[WatchConfig] = var()
 
 
 def get_config(config_path: Path) -> BrutConfig:

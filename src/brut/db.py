@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import lru_cache
+from io import BytesIO
 from typing import Generator, List, Optional
 
 from sqlalchemy import (
@@ -27,8 +28,10 @@ from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.orm import Session, registry, relationship
 
 from .env import instance as env
+from .hasher import HashType, hash_io
 from .log import instance as log
 
+# The SQLAlchemy ORM registry that we use to decorate dataclasses with
 orm_registry = registry()
 
 
@@ -62,6 +65,31 @@ class Content:
     processed_at: Optional[datetime] = field(default=None)
     processed_message: Optional[str] = field(default=None)
     artifacts: List[Artifact] = field(default_factory=list)
+
+    @staticmethod
+    def build_fingerprint(source: str, source_id: str) -> str:
+        """Build the appropriate fingerprint for a given source and source id.
+
+        Args:
+            source (str):
+                The source that this content is using.
+            source_id (str):
+                The source_id that this content is using.
+
+        Returns:
+            str:
+                The appropriate SHA-256 fingerprint for the content.
+        """
+
+        fingerprint = hash_io(
+            BytesIO(bytes(f"{source!s}|{source_id!s}", "utf-8")),
+            {HashType.SHA256},
+        )[HashType.SHA256]
+        log.debug(
+            f"Computed fingerprint for ({source!r}, {source_id!r}) as {fingerprint!r}"
+        )
+
+        return fingerprint
 
 
 @orm_registry.mapped

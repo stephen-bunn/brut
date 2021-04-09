@@ -8,18 +8,18 @@ from functools import partial
 from typing import Optional, Union
 
 import file_config
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, SchedulerEvent
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from .config import BrutConfig, ScheduleConfig
 from .log import instance as log
-from .tasks import handle_content
+from .tasks import watch
 
 
 def get_trigger(
-    schedule: ScheduleConfig,
+    schedule_config: ScheduleConfig,
 ) -> Optional[Union[IntervalTrigger, CronTrigger]]:
     """Get the appropriate APScheduler trigger for a given ScheduleConfig.
 
@@ -35,15 +35,22 @@ def get_trigger(
             The APScheduler trigger if determined.
     """
 
-    if schedule.cron is not None:
-        return CronTrigger.from_crontab(schedule.cron)
-    elif schedule.interval is not None:
-        return IntervalTrigger(**file_config.to_dict(schedule.interval))
+    if schedule_config.crontab is not None:
+        return CronTrigger.from_crontab(schedule_config.crontab)
+    elif schedule_config.interval is not None:
+        return IntervalTrigger(**file_config.to_dict(schedule_config.interval))
 
     return None
 
 
-def schedule_listener(event):
+def schedule_listener(event: SchedulerEvent):
+    """Schedule listener function responsible for reporting scheduler status.
+
+    Args:
+        event (~apscheduler.events.SchedulerEvent):
+            The APScheduler event.
+    """
+
     if event.exception:
         log.error(
             "Unexpected exception occurred during task scheduling job "
@@ -54,11 +61,11 @@ def schedule_listener(event):
         log.debug(f"Scheduler successfully kicked off job {event.job_id!r}")
 
 
-def get_scheduler(config: BrutConfig) -> BlockingScheduler:
+def get_scheduler(brut_config: BrutConfig) -> BlockingScheduler:
     """Build the blocking scheduler for the given BrutConfig.
 
     Parameters:
-        config (~brut.config.BrutConfig):
+        brut_config (~brut.config.BrutConfig):
             The current Brut configuration.
 
     Returns:
@@ -66,24 +73,26 @@ def get_scheduler(config: BrutConfig) -> BlockingScheduler:
             The scheduler to use for running the configured Brut tasks.
     """
 
-    log.info(f"Constructing a blocking scheduler based on configuration from {config}")
+    log.info(
+        f"Constructing a blocking scheduler based on configuration from {brut_config}"
+    )
     scheduler = BlockingScheduler()
 
-    for observe in config.observe:
-        trigger = get_trigger(observe.schedule)
+    for watch_config in brut_config.watch:
+        trigger = get_trigger(watch_config.schedule)
         if not trigger:
             log.warning(
-                f"Trigger could not be determined for {observe.schedule}, "
-                f"skipping adding {observe.name!r}"
+                f"Trigger could not be determined for {watch_config.schedule}, "
+                f"skipping adding {watch_config.name!r}"
             )
 
-        args = observe.args or []
-        kwargs = observe.kwargs or {}
-        log.info(f"Adding job {observe.name!r} using trigger {trigger}")
+        args = watch_config.args or []
+        kwargs = watch_config.kwargs or {}
+        log.info(f"Adding watch job {watch_config.name!r} using trigger {trigger}")
 
         job = partial(
-            handle_content.send,
-            observe.type,
+            watch.send,
+            watch_config.type,
             *args,
             **kwargs,
         )

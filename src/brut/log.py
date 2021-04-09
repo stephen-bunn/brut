@@ -47,9 +47,6 @@ from .constants import APP_NAME, APP_VERSION
 from .env import instance as env
 
 DEFAULT_LOG_DIRPATH = Path(env.log.dir)
-if not DEFAULT_LOG_DIRPATH.is_dir():
-    DEFAULT_LOG_DIRPATH.mkdir(parents=True)
-
 DEFAULT_LOG_FORMAT = "<dim>{time}</dim> <level>{level:8s}</level> {message}"
 DEFAULT_RECORD_HANDLER = dict(
     sink=DEFAULT_LOG_DIRPATH.joinpath(f"{APP_NAME!s}.log").as_posix(),
