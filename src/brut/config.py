@@ -47,6 +47,7 @@ class BrutConfig:
     """Contains observe configuration for the app."""
 
     watch: List[WatchConfig] = var()
+    enqueue: ScheduleConfig = var()
 
 
 def get_config(config_path: Path) -> BrutConfig:

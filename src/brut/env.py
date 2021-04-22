@@ -56,6 +56,7 @@ class AppEnv:
     redis: RedisEnv = environ.group(RedisEnv)
     reddit: RedditEnv = environ.group(RedditEnv)
     config_path: Path = environ.var(converter=Path)
+    store_path: Path = environ.var(converter=Path)
 
 
 def get_env() -> AppEnv:

@@ -31,6 +31,8 @@ from enum import Enum
 from pathlib import Path
 from typing import IO, BinaryIO, Callable, Dict, Set, Union
 
+import xxhash
+
 from .log import instance as log
 
 Hasher_T = Callable[[Union[bytes, bytearray, memoryview]], "hashlib._Hash"]
@@ -41,6 +43,7 @@ DEFAULT_CHUNK_SIZE = 2 ** 16
 class HashType(Enum):
     """Enumeration of supported hash types."""
 
+    XXHASH = "xxhash"
     MD5 = "md5"
     SHA1 = "sha1"
     SHA256 = "sha256"
@@ -52,6 +55,7 @@ class HashType(Enum):
     # enumeration. So you can do HashType._HashType__available_hashers or
     # HashType("__available_hashers") and it's *technically* valid.
     __available_hashers: Dict[str, Hasher_T] = {
+        XXHASH: xxhash.xxh64,
         MD5: hashlib.md5,
         SHA1: hashlib.sha1,
         SHA256: hashlib.sha256,

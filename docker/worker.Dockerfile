@@ -2,7 +2,7 @@
 FROM python:3.9-alpine
 
 # fetch build dependent packages
-RUN apk add --no-cache curl gcc g++ make linux-headers musl-dev openssl-dev libffi-dev file rust cargo
+RUN apk add --no-cache curl gcc g++ make linux-headers musl-dev openssl-dev libffi-dev file rust cargo git libxml2-dev libxslt-dev
 
     # python
 ENV PYTHONBUFFERED=1 \
@@ -26,10 +26,11 @@ RUN pip install "poetry==$POETRY_VERSION"
 
 # copy requirements definitions to ensure they are cached
 WORKDIR /code
-COPY pyproject.toml poetry.lock /code
+COPY pyproject.toml poetry.lock /code/
 
 # install runtime dependencies (uses $POETRY_VIRTUALENVS_IN_PROJECT)
 RUN poetry install --no-dev --no-root
 
-COPY . /code
+COPY . /code/
+RUN mkdir -p /data/
 CMD ["/code/docker/worker-entrypoint.sh"]

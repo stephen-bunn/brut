@@ -15,7 +15,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from .config import BrutConfig, ScheduleConfig
 from .log import instance as log
-from .tasks import watch
+from .tasks import enqueue, watch
 
 
 def get_trigger(
@@ -98,6 +98,11 @@ def get_scheduler(brut_config: BrutConfig) -> BlockingScheduler:
         )
 
         scheduler.add_job(job, trigger=trigger)
+
+    # Add the enqueue job for fetched content
+    enqueue_trigger = get_trigger(brut_config.enqueue)
+    log.info(f"Adding fetch enqueue job using trigger {enqueue_trigger}")
+    scheduler.add_job(enqueue.send, trigger=enqueue_trigger)
 
     scheduler.add_listener(schedule_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
     return scheduler

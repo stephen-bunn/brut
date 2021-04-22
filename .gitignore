@@ -141,4 +141,5 @@ main.py
 
 # Brut specific
 data/
+store/
 brut.yml

@@ -9,6 +9,7 @@ services:
       - .env
     volumes:
       - ./data:/code/data
+      - ./store:/data
     depends_on:
       - redis
       - worker
@@ -22,6 +23,7 @@ services:
       - .env
     volumes:
       - ./data:/code/data
+      - ./store:/data
     depends_on:
       - redis
 
