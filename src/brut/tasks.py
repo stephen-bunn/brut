@@ -97,12 +97,8 @@ def fetch(content_id: int, url: str):
 
         db_content.processed_at = datetime.now()
         plugin = get_plugin(url)
-        if not plugin:
+        if not plugin or isinstance(plugin, GenericPlugin):
             db_content.processed_message = "unhandled"
-            return
-
-        if isinstance(plugin, GenericPlugin):
-            db_content.processed_message = "generic"
             return
 
         store_path = env.store_path
