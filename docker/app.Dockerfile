@@ -15,7 +15,10 @@ ENV PYTHONBUFFERED=1 \
     POETRY_VERSION=1.1.5 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1
+    POETRY_NO_INTERACTION=1 \
+    # megu
+    MEGU_PLUGIN_DIR=/.megu/plugins \
+    MEGU_LOG_DIR=/code/data/logs
 
 # prepend peotry and venv to path
 ENV PATH="$POETRY_HOME/bin:/code/.venv/bin:$PATH" \
@@ -30,6 +33,14 @@ COPY pyproject.toml poetry.lock /code/
 
 # install runtime dependencies (uses $POETRY_VIRTUALENVS_IN_PROJECT)
 RUN poetry install --no-dev --no-root
+
+# install and setup public megu plugins
+RUN mkdir -p $MEGU_PLUGIN_DIR/megu_gfycat
+RUN python -m pip install --upgrade git+https://github.com/stephen-bunn/megu-gfycat.git --target $MEGU_PLUGIN_DIR/megu_gfycat
+
+COPY ./vendor /vendor
+COPY ./scripts /scripts
+RUN /scripts/install-vendors.sh
 
 COPY . /code/
 RUN mkdir -p /data/

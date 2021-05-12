@@ -143,3 +143,4 @@ main.py
 data/
 store/
 brut.yml
+vendor/*

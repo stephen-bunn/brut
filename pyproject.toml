@@ -55,14 +55,14 @@ SQLAlchemy = "^1.4.5"
 dramatiq = {extras = ["redis", "watch"], version = "^1.10.0"}
 alembic = "^1.5.8"
 APScheduler = "^3.7.0"
-environ-config = "^20.1.0"
+environ-config = "^21.1.0"
 loguru = "^0.5.3"
 praw = "^7.2.0"
 requests = "^2.25.1"
 file-config = {extras = ["pyaml"], version = "^1.0.0"}
 cached-property = "^1.5.2"
-megu = {git = "https://github.com/stephen-bunn/megu"}
 xxhash = "^2.0.2"
+megu = {git = "https://github.com/stephen-bunn/megu"}
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

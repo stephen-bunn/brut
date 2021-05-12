@@ -14,6 +14,7 @@ from dramatiq.results import Results
 from dramatiq.results.backends import RedisBackend
 from megu.filters import best_content
 from megu.helpers import temporary_directory
+from megu.plugin.generic import GenericPlugin
 from megu.services import get_downloader, get_plugin, iter_content, merge_manifest
 
 from .db import Artifact, Content, db_session
@@ -100,6 +101,10 @@ def fetch(content_id: int, url: str):
             db_content.processed_message = "unhandled"
             return
 
+        if isinstance(plugin, GenericPlugin):
+            db_content.processed_message = "generic"
+            return
+
         store_path = env.store_path
         if not store_path.is_dir():
             log.info(f"Creating store directory at {store_path}")
@@ -119,25 +124,19 @@ def fetch(content_id: int, url: str):
 
                     to_path = store_path / fragment_path / content.filename
                     if to_path.exists():
-                        if len(content.checksums) <= 0:
-                            log.warning(
-                                f"Skipping content since {to_path!s} already exists"
-                            )
-                            db_content.processed_message = "skipped"
-                            continue
-
-                        first_checksum = content.checksums[0]
-                        hash_type = HashType(first_checksum.type)
-                        if (
-                            hash_file(to_path, {hash_type})[hash_type]
-                            == first_checksum.hash
-                        ):
-                            log.warning(
-                                f"Skipping content since {to_path} already exists and "
-                                f"checksum {first_checksum.hash} verified"
-                            )
-                            db_content.processed_message = "skipped"
-                            continue
+                        if len(content.checksums) > 0:
+                            first_checksum = content.checksums[0]
+                            hash_type = HashType(first_checksum.type)
+                            if (
+                                hash_file(to_path, {hash_type})[hash_type]
+                                == first_checksum.hash
+                            ):
+                                log.warning(
+                                    f"Skipping content since {to_path} already exists "
+                                    f"and checksum {first_checksum.hash} verified"
+                                )
+                                db_content.processed_message = "skipped"
+                                continue
 
                     if not to_path.parent.is_dir():
                         log.info(
