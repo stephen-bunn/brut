@@ -13,8 +13,8 @@ from cached_property import cached_property
 from praw import Reddit
 from praw.models import Submission, Subreddit
 
+from ..config import instance as config
 from ..db import Content
-from ..env import instance as env
 from ..log import instance as log
 from .base import BaseWatcher
 
@@ -38,12 +38,13 @@ class SubredditWatcher(BaseWatcher):
         """
 
         log.info(
-            f"Building read-only Reddit instance using client {env.reddit.client_id!r}"
+            "Building read-only Reddit instance using client "
+            f"{config.watchers.reddit.client_id!r}"
         )
         reddit = Reddit(
-            client_id=env.reddit.client_id,
-            client_secret=env.reddit.client_secret,
-            user_agent=env.reddit.user_agent,
+            client_id=config.watchers.reddit.client_id,
+            client_secret=config.watchers.reddit.client_secret,
+            user_agent=config.watchers.reddit.user_agent,
         )
         reddit.read_only = True
         return reddit

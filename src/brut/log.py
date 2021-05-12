@@ -43,19 +43,19 @@ from typing import Any, Dict, List
 
 import loguru
 
+from .config import instance as config
 from .constants import APP_NAME, APP_VERSION
-from .env import instance as env
 
-DEFAULT_LOG_DIRPATH = Path(env.log.dir)
+DEFAULT_LOG_DIRPATH = Path(config.log.dir)
 DEFAULT_LOG_FORMAT = "<dim>{time}</dim> <level>{level:8s}</level> {message}"
 DEFAULT_RECORD_HANDLER = dict(
     sink=DEFAULT_LOG_DIRPATH.joinpath(f"{APP_NAME!s}.log").as_posix(),
-    level=env.log.level,
+    level=config.log.level,
     format=DEFAULT_LOG_FORMAT,
-    rotation=env.log.rotation,
-    retention=env.log.retention,
-    compression=env.log.compression,
-    serialize=env.log.serialize,
+    rotation=config.log.rotation,
+    retention=config.log.retention,
+    compression=config.log.compression,
+    serialize=config.log.serialize,
 )
 DEFAULT_STDOUT_HANDLER = dict(
     sink=sys.stdout,

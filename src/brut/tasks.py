@@ -17,8 +17,8 @@ from megu.helpers import temporary_directory
 from megu.plugin.generic import GenericPlugin
 from megu.services import get_downloader, get_plugin, iter_content, merge_manifest
 
+from .config import instance as config
 from .db import Artifact, Content, db_session
-from .env import instance as env
 from .hasher import HashType, hash_file
 from .helpers import setup_logging
 from .log import instance as log
@@ -31,7 +31,7 @@ setup_logging()
 # must occur before the @dramatiq.actor decorator is used or you will never get task
 # messages being read from Redis
 redis_backend = RedisBackend()
-redis_broker = RedisBroker(url=env.redis.url)
+redis_broker = RedisBroker(url=config.redis)
 redis_broker.add_middleware(Results(backend=redis_backend))
 
 dramatiq.set_broker(redis_broker)
@@ -101,7 +101,7 @@ def fetch(content_id: int, url: str):
             db_content.processed_message = "unhandled"
             return
 
-        store_path = env.store_path
+        store_path = Path(config.store)
         if not store_path.is_dir():
             log.info(f"Creating store directory at {store_path}")
             store_path.mkdir()

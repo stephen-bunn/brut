@@ -27,7 +27,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.orm import Session, registry, relationship
 
-from .env import instance as env
+from .config import instance as config
 from .hasher import HashType, hash_io
 from .log import instance as log
 
@@ -121,8 +121,8 @@ def get_engine() -> Engine:
             The SQLAlchemy engine for the primary database.
     """
 
-    log.info(f"Constructing a database engine from {env.db.url!r}")
-    engine = create_engine(env.db.url)
+    log.info(f"Constructing a database engine from {config.db!r}")
+    engine = create_engine(config.db)
     orm_registry.metadata.bind = engine
     return engine
 
