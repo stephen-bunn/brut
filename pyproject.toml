@@ -63,6 +63,7 @@ file-config = {extras = ["pyaml"], version = "^1.0.0"}
 cached-property = "^1.5.2"
 xxhash = "^2.0.2"
 megu = {git = "https://github.com/stephen-bunn/megu"}
+url-normalize = "^1.4.3"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

@@ -147,13 +147,23 @@ def fetch(content_id: int, url: str):
 
                     db_content.processed_message = None
 
-                    # setup artifact in the database
-                    db_artifact = Artifact(
-                        created_at=datetime.now(),
-                        fingerprint=checksum,
-                    )
-                    db_artifact.content_id = content_id
-                    session.add(db_artifact)
+                    if not session.query(
+                        session.query(Artifact)
+                        .filter(Artifact.fingerprint == checksum)
+                        .exists()
+                    ).scalar():
+                        # setup artifact in the database
+                        db_artifact = Artifact(
+                            created_at=datetime.now(),
+                            fingerprint=checksum,
+                        )
+                        db_artifact.content_id = content_id
+                        session.add(db_artifact)
+                    else:
+                        log.warning(
+                            "Encountered pre-existing artifact with checksum ",
+                            f"{checksum}, skipping adding artifact",
+                        )
 
         except Exception as exc:
             log.exception(str(exc))

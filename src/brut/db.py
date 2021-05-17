@@ -26,6 +26,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.orm import Session, registry, relationship
+from url_normalize import url_normalize
 
 from .config import instance as config
 from .hasher import HashType, hash_io
@@ -67,14 +68,12 @@ class Content:
     artifacts: List[Artifact] = field(default_factory=list)
 
     @staticmethod
-    def build_fingerprint(source: str, source_id: str) -> str:
+    def build_fingerprint(url: str) -> str:
         """Build the appropriate fingerprint for a given source and source id.
 
         Args:
-            source (str):
-                The source that this content is using.
-            source_id (str):
-                The source_id that this content is using.
+            url (str):
+                The url of the content.
 
         Returns:
             str:
@@ -82,12 +81,10 @@ class Content:
         """
 
         fingerprint = hash_io(
-            BytesIO(bytes(f"{source!s}|{source_id!s}", "utf-8")),
+            BytesIO(bytes(url_normalize(url), "utf-8")),
             {HashType.SHA256},
         )[HashType.SHA256]
-        log.debug(
-            f"Computed fingerprint for ({source!r}, {source_id!r}) as {fingerprint!r}"
-        )
+        log.debug(f"Computed fingerprint for ({url!r}) as {fingerprint!r}")
 
         return fingerprint
 

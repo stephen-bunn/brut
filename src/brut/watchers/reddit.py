@@ -102,7 +102,7 @@ class SubredditWatcher(BaseWatcher):
                 created_at=datetime.fromtimestamp(submission.created_utc),
                 source=SOURCE,
                 source_id=submission.id,
-                fingerprint=Content.build_fingerprint(SOURCE, submission.id),
+                fingerprint=Content.build_fingerprint(submission.url),
                 url=submission.url,
                 data=json.dumps(
                     {
