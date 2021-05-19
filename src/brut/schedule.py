@@ -77,7 +77,9 @@ def get_scheduler(brut_config: BrutConfig) -> BlockingScheduler:
         f"Constructing a blocking scheduler based on configuration from {brut_config}"
     )
     scheduler = BlockingScheduler()
+    scheduler.add_listener(schedule_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
 
+    # add watch jobs for polling for new content
     for watch_config in brut_config.watch:
         trigger = get_trigger(watch_config.schedule)
         if not trigger:
@@ -98,11 +100,13 @@ def get_scheduler(brut_config: BrutConfig) -> BlockingScheduler:
         )
 
         scheduler.add_job(job, trigger=trigger)
+        if watch_config.schedule.immediate:
+            log.info(f"Immediately triggering {watch_config.name}")
+            job()
 
     # Add the enqueue job for fetched content
     enqueue_trigger = get_trigger(brut_config.enqueue)
     log.info(f"Adding fetch enqueue job using trigger {enqueue_trigger}")
     scheduler.add_job(enqueue.send, trigger=enqueue_trigger)
 
-    scheduler.add_listener(schedule_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
     return scheduler

@@ -11,35 +11,51 @@
 - Setup environment variables in `./.env`
 
 ```ini
-APP_DB_URL=sqlite:///data/brut.db
-APP_LOG_DIR=/code/data/logs
-APP_REDIS_URL=redis://redis:6379/0
-
-# reddit configuration
-APP_REDDIT_CLIENT_ID={Reddit app client id}
-APP_REDDIT_CLIENT_SECRET={Reddit app client secret}
-APP_REDDIT_USER_AGENT=Brut Archive Toolset by /u/{Reddit username that owns client_id}
-
+# The path to where the brut.yml config was copied during the container build
 APP_CONFIG_PATH=/code/brut.yml
 ```
 
 - Setup application configuration in `./brut.yml`
 
 ```yaml
+db: sqlite:///data/brut.db  # The database URL for data persistence
+redis: redis://redis:6379/0  # The Redis URL to attach to for job management
+store: /data  # The directory where artifacts should be persisted
+
+# Defines logging setup for logs emitted by Brut
+log:
+  dir: /code/data/logs
+
+# Watchers defines configuration necessary for various supported watcher types
+watchers:
+  reddit:
+    client_id: [Reddit CLIENT_ID]  # The CLIENT_ID for your Reddit app
+    client_secret: [Reddit CLIENT_SECRET]  # The CLIENT_SECRET for your Reddit app
+    user_agent: [Reddit user agent]  # The user-agent reported to Reddit
+
+# Watch defines what information from the web will be polled on what schedule
 watch:
-  - name: Reddit /r/apexlegends
-    type: subreddit
+  - name: Reddit /r/apexlegends  # a user-friendly name for logging purposes
+    type: subreddit  # uses the subreddit watcher type
     args:
-      - apexlegends
+      - apexlegends  # monitors the subreddit /r/apexlegends
     schedule:
       interval:
-        minutes: 1
+        minutes: 1  # fires every minute
+      immediate: true  # fires immediately on creation of the watch
+
   - name: Reddit /r/apexuniversity
     type: subreddit
     args:
       - apexuniversity
     schedule:
-      crontab: */5 * * * *
+      crontab: */5 * * * *  # fires every 5 minutes
+
+# Enqueue is how often we scan and queue new Content entries produced by watchers
+# to be fetched and persisted to the store
+enqueue:
+  interval:
+    minutes: 5
 ```
 
 - Start up the tool using `docker-compose`.

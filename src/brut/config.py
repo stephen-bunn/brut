@@ -29,6 +29,7 @@ class ScheduleConfig:
 
     crontab: str = var(required=False)
     interval: IntervalConfig = var(required=False)
+    immediate: bool = var(default=False)
 
 
 @config
