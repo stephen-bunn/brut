@@ -74,7 +74,7 @@ def watch(watcher_type: str, *args, **kwargs):
 
 @dramatiq.actor
 def enqueue():
-    """Job responsible for enqueing non-processed content to be fetched."""
+    """Job responsible for enqueuing non-processed content to be fetched."""
 
     with db_session() as session:
         for content in session.query(Content).filter(
@@ -89,6 +89,15 @@ def enqueue():
 
 @dramatiq.actor
 def fetch(content_id: int, url: str):
+    """Evaluate and fetch content to persist it to the store.
+
+    Args:
+        content_id (int):
+            The database ID of the content that needs to be evaluated.
+        url (str):
+            The URL of the content that should be evaluated
+    """
+
     with db_session() as session:
         db_content = session.query(Content).get(content_id)
         if not db_content:
