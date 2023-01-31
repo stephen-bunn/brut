@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    volumes:
+      - data:/data/
+      - ./data:/data/
+    depends_on:
+      - redis
+      - worker
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    volumes:
+      - data:/data/
+      - ./data:/data/
+    depends_on:
+      - redis
+
+  redis:
+    restart: unless-stopped
+    image: "redis:alpine"
+    ports:
+      - 6379:6379
+    volumes:
+      - data:/data/
+
+volumes:
+  data:
