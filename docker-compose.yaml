@@ -9,6 +9,8 @@ services:
     volumes:
       - data:/data/
       - ./data:/data/
+    networks:
+      - net1
     depends_on:
       - redis
       - worker
@@ -18,9 +20,14 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
+    environment:
+      dramatiq_prom_host: worker
+      dramatiq_prom_port: 9191
     volumes:
       - data:/data/
       - ./data:/data/
+    networks:
+      - net1
     depends_on:
       - redis
 
@@ -31,6 +38,49 @@ services:
       - 6379:6379
     volumes:
       - data:/data/
+    networks:
+      - net1
+
+  prometheus:
+    restart: unless-stopped
+    image: prom/prometheus:latest
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention=200h"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./conf/prometheus/:/etc/prometheus/
+      - prometheus:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - net1
+
+  grafana:
+    restart: unless-stopped
+    image: grafana/grafana:main-ubuntu
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./conf/grafana/datasources:/etc/grafana/datasources
+      - ./conf/grafana/dashboards:/etc/grafana/dashboards
+      - ./conf/grafana/setup.sh:/setup.sh
+    entrypoint: /setup.sh
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - 3000:3000
+    networks:
+      - net1
+
+networks:
+  net1:
 
 volumes:
   data:
+  grafana:
+  prometheus:
