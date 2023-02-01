@@ -4,38 +4,10 @@
   "type": "object",
   "title": "Brut Configuration",
   "required": [
-    "watchers",
     "watch",
     "enqueue"
   ],
   "properties": {
-    "watchers": {
-      "type": "object",
-      "required": [
-        "reddit"
-      ],
-      "properties": {
-        "reddit": {
-          "type": "object",
-          "required": [
-            "client_id",
-            "client_secret",
-            "user_agent"
-          ],
-          "properties": {
-            "client_id": {
-              "type": "string"
-            },
-            "client_secret": {
-              "type": "string"
-            },
-            "user_agent": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
     "watch": {
       "type": "array",
       "minItems": 1,

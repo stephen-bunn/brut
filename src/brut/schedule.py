@@ -1,3 +1,5 @@
+"""Defines helpers to create the desired scheduler."""
+
 from functools import partial
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, SchedulerEvent
@@ -12,10 +14,25 @@ log = get_logger()
 
 
 def get_trigger(schedule_config: ScheduleConfig) -> CronTrigger:
+    """Create a trigger from the provided schedule configuration.
+
+    Args:
+        schedule_config (ScheduleConfig): The schedule configuration.
+
+    Returns:
+        CronTrigger: The created trigger from the given schedule configuration.
+    """
+
     return CronTrigger.from_crontab(schedule_config["crontab"])
 
 
 def schedule_listener(event: SchedulerEvent):
+    """The listener for the schedule executions.
+
+    Args:
+        event (SchedulerEvent): The event being sent from the scheduler.
+    """
+
     if event.exception:  # type: ignore
         log.error(
             f"Unexpected error occured during task {event.job_id}",  # type: ignore
@@ -26,6 +43,15 @@ def schedule_listener(event: SchedulerEvent):
 
 
 def get_scheduler(brut_config: BrutConfig) -> BlockingScheduler:
+    """Build the necessary scheduler given the Brut configuration.
+
+    Args:
+        brut_config (BrutConfig): The Brut configuration to build the scheduler from.
+
+    Returns:
+        BlockingScheduler: The built blocking scheduler.
+    """
+
     scheduler = BlockingScheduler()
     scheduler.add_listener(schedule_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
 

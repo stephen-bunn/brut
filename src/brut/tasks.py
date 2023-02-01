@@ -1,3 +1,5 @@
+"""Describes tasks used for the application."""
+
 import shutil
 from pathlib import Path
 
@@ -12,18 +14,18 @@ from megu.helpers import temporary_directory
 from megu.models import URL
 from megu.plugin.generic import GenericPlugin
 
-from brut.config import get_config
 from brut.db import client
 from brut.env import instance as env
 from brut.log import get_logger
 from brut.watcher import get_watcher
 
 ARTIFACT_PATH_STRATEGY = [slice(0, 2), slice(2, 4)]
+"""The artifact storage path generation strategy."""
 
 
 log = get_logger()
-conf = get_config()
 
+# Configure the Dramatiq backend and broker for tasks
 redis_backend = RedisBackend()
 redis_broker = RedisBroker(url=env.redis_url)
 redis_broker.add_middleware(Results(backend=redis_backend))
@@ -31,6 +33,16 @@ dramatiq.set_broker(redis_broker)
 
 
 def _build_artifact_filepath(checksum: str, suffix: str | None = None) -> Path:
+    """Construct the artifact filepath from the given checksum.
+
+    Args:
+        checksum (str): The checksum of the artifact file.
+        suffix (str | None, optional): The suffix of the artifact file. Defaults to None.
+
+    Returns:
+        Path: The artifact filepath to store the artifact as.
+    """
+
     return (
         Path(*[checksum[fragment_slice] for fragment_slice in ARTIFACT_PATH_STRATEGY])
         .joinpath(checksum)
@@ -40,18 +52,30 @@ def _build_artifact_filepath(checksum: str, suffix: str | None = None) -> Path:
 
 @dramatiq.actor
 def watch(watcher_type: str, *args, **kwargs):
+    """Task to watch and create artifacts from a specific watcher type.
+
+    Args:
+        watcher_type (str): The watcher type to create artifacts from.
+    """
+
     watcher = get_watcher(watcher_type)
     if watcher is None:
         log.error(f"Could not determine watcher for type {watcher_type}")
         return
 
     log.info(f"Polling for new content with watcher {watcher.type} ({args}, {kwargs})")
-    for artifact in watcher().iter_artifacts(*args, **kwargs):
+    for artifact in watcher.iter_artifacts(*args, **kwargs):
         log.info(f"Adding artifact {artifact.fingerprint} ({artifact.url})")
 
 
 @dramatiq.actor
 def fetch(artifact_fingerprint: str):
+    """Task to fetch artifacts to local storage given the artifact fingerprint.
+
+    Args:
+        artifact_fingerprint (str): The fingerprint of the artifact to fetch.
+    """
+
     with client.db_session(env.database_path) as session:
         artifact = client.get_artifact(session, artifact_fingerprint)
         if artifact is None:
@@ -60,6 +84,8 @@ def fetch(artifact_fingerprint: str):
 
         artifact_url = URL(artifact.url)
         plugin = get_plugin(artifact_url, env.megu.plugin_dir)
+
+        # If we don't have a specific plugin to fetch the content, we mark the artifact as unhandled
         if isinstance(plugin, GenericPlugin):
             client.mark_artifact_fetched(session, artifact, "unhandled")
             return
@@ -88,6 +114,7 @@ def fetch(artifact_fingerprint: str):
                             content_checksum = content.checksums[0]
                             content_checksum_type = HashType(content_checksum.type)
 
+                            # If the content already seems to exist, we mark the artifact as skipped
                             if (
                                 hash_file(to_path, {content_checksum_type})[content_checksum_type]
                                 == content_checksum.value
@@ -102,6 +129,8 @@ def fetch(artifact_fingerprint: str):
                         log.debug(f"Creating store fragment directory at {to_path.parent}")
                         to_path.parent.mkdir(parents=True)
 
+                    # After fetching the artifact and moving it to its final local stoarge location,
+                    # mark the artifact as successfully fetched
                     shutil.move(temp_filepath, to_path)
                     client.mark_artifact_fetched(session, artifact, "success")
                     log.info(f"Fetched artifact {artifact.fingerprint} to {to_path}")
@@ -112,6 +141,8 @@ def fetch(artifact_fingerprint: str):
 
 @dramatiq.actor
 def enqueue():
+    """Task to enqueue artifact for fetching."""
+
     with client.db_session(env.database_path) as session:
         for artifact in client.iter_unprocessed_artifacts(session):
             log.info(f"Enqueing artifact {artifact.fingerprint} for fetch")

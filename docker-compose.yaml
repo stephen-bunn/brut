@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app
+    env_file:
+      - .env
     environment: &app_environment
       BRUT_REDIS_URL: redis://redis:6379/0
       BRUT_LOG_LOKI_URL: http://loki:3100/loki/api/v1/push
@@ -23,6 +25,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
+    env_file:
+      - .env
     environment:
       <<: *app_environment
       dramatiq_prom_host: worker
