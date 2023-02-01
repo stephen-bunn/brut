@@ -14,14 +14,13 @@ from megu.plugin.generic import GenericPlugin
 
 from brut.config import get_config
 from brut.db import client
-from brut.env import get_env
+from brut.env import instance as env
 from brut.log import get_logger
 from brut.watcher import get_watcher
 
 ARTIFACT_PATH_STRATEGY = [slice(0, 2), slice(2, 4)]
 
 
-env = get_env()
 log = get_logger()
 conf = get_config()
 

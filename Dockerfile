@@ -34,8 +34,7 @@ RUN mkdir -p /data/
 ENV PYTHONPATH="/code/:$PYTHONPATH" \
     BRUT_CONFIG_PATH=/brut.yaml \
     BRUT_STORE_DIR=/data/ \
-    BRUT_DATABASE_PATH=/data/brut.db \
-    BRUT_REDIS_URL=redis://redis:6379/0
+    BRUT_DATABASE_PATH=/data/brut.db
 
 # Build application using custom entrypoint
 FROM build as app

@@ -1,15 +1,18 @@
 import sys
 from functools import lru_cache
-from logging import Logger
 
 import loguru
+from logging_loki import LokiHandler
+
+from brut.constants import APP_NAME, APP_VERSION
+from brut.env import instance as env
 
 
 def configure_logger(
-    logger: Logger,
+    logger: "loguru.Logger",
     level: str = "INFO",
-) -> Logger:
-    logger.configure(  # type: ignore
+) -> "loguru.Logger":
+    logger.configure(
         handlers=[
             dict(
                 sink=sys.stdout,
@@ -20,9 +23,19 @@ def configure_logger(
             )
         ]
     )
+
+    if env.log.loki_url is not None:
+        logger.add(
+            sink=LokiHandler(
+                url=env.log.loki_url,
+                tags={"app": APP_NAME, "version": APP_VERSION},
+                version="1",
+            )
+        )
+
     return logger
 
 
 @lru_cache
-def get_logger() -> Logger:
-    return configure_logger(loguru.logger)  # type: ignore
+def get_logger() -> "loguru.Logger":
+    return configure_logger(loguru.logger, level=env.log.level)  # type: ignore

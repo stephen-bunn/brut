@@ -6,6 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app
+    environment: &app_environment
+      BRUT_REDIS_URL: redis://redis:6379/0
+      BRUT_LOG_LOKI_URL: http://loki:3100/loki/api/v1/push
     volumes:
       - data:/data/
       - ./data:/data/
@@ -21,6 +24,7 @@ services:
       dockerfile: Dockerfile
       target: worker
     environment:
+      <<: *app_environment
       dramatiq_prom_host: worker
       dramatiq_prom_port: 9191
     volumes:
@@ -59,6 +63,16 @@ services:
     networks:
       - net1
 
+  loki:
+    restart: unless-stopped
+    image: grafana/loki:latest
+    volumes:
+      - loki:/loki
+    ports:
+      - 3100:3100
+    networks:
+      - net1
+
   grafana:
     restart: unless-stopped
     image: grafana/grafana:main-ubuntu
@@ -84,3 +98,4 @@ volumes:
   data:
   grafana:
   prometheus:
+  loki:

@@ -7,11 +7,10 @@ from praw.models import Subreddit
 from brut.config import get_config
 from brut.db import client
 from brut.db.models import Artifact
-from brut.env import get_env
+from brut.env import instance as env
 from brut.log import get_logger
 from brut.types import WatcherProtocol
 
-env = get_env()
 log = get_logger()
 
 

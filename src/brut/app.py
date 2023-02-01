@@ -1,9 +1,7 @@
 from brut.config import BrutConfig, get_config
-from brut.env import get_env
 from brut.log import get_logger
 from brut.schedule import get_scheduler
 
-env = get_env()
 log = get_logger()
 
 
